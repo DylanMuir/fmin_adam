@@ -1,35 +1,64 @@
 # Adam optimiser
-## Stochastic gradient descent
-This is a `Matlab` implementation of the Adam optimiser, designed for stochastic gradient descent. It maintains estimates of the moments of the gradient independently for each parameter.
+This is a `Matlab` implementation of the Adam optimiser from Kingma and Ba [[1]], designed for stochastic gradient descent. It maintains estimates of the moments of the gradient independently for each parameter.
 
-### Usage
+## Usage
 ` [x, fval, exitflag, output] = fmin_adam(fun, x0 <, stepSize, beta1, beta2, epsilon, nEpochSize, options>)`
 
-`fmin_adam` is an implementation of the Adam optimisation algorithm (gradient descent with Adaptive learning rates individually on each parameter, with momentum) from Kingma and Ba [[1]]. Adam is designed to work on stochastic gradient descent problems; i.e. when only small batches of data are used to estimate the gradient on each iteration, or when stochastic dropout regularisation is used [[2]].
+`fmin_adam` is an implementation of the Adam optimisation algorithm (gradient descent with Adaptive learning rates individually on each parameter, with Momentum) from Kingma and Ba [[1]]. Adam is designed to work on stochastic gradient descent problems; i.e. when only small batches of data are used to estimate the gradient on each iteration, or when stochastic dropout regularisation is used [[2]].
 
-### Examples
-####Simple regression problem with gradients
+## Examples
+###Simple regression problem with gradients
 
-Set up a simple linear regression problem
-
-    nDataSetSize = 1000;
-    vfInput = rand(1, nDataSetSize);
-    xTrue = [3 2];
-    fhProblem = @(x, vfInput) vfInput .* x(1) + x(2);
-    vfResp = fhProblem(xTrue, vfInput) + randn(1, nDataSetSize) * .1;
-
-Define a cost function that includes gradients
-
-
-####Linear regression with minibatches
-
-Set up a simple linear regression problem
+Set up a simple linear regression problem: $$$y = x\cdot\phi_1 + \phi_2 + \zeta$$$, where $$$\zeta \sim N(0, 0.1)$$$. We'll take $$$\phi = \left[3, 2\right]$$$ for this example. Let's draw some samples from this problem:
 
     nDataSetSize = 1000;
     vfInput = rand(1, nDataSetSize);
-    xTrue = [3 2];
-    fhProblem = @(x, vfInput) vfInput .* x(1) + x(2);
-    vfResp = fhProblem(xTrue, vfInput) + randn(1, nDataSetSize) * .1;
+    phiTrue = [3 2];
+    fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
+    vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
+
+Now we define a cost function to minimise, which returns analytical gradients:
+
+    function [fMSE, vfGrad] = LinearRegressionMSEGradients(phi, vfInput, vfResp)
+       % - Compute mean-squared error using the current parameter estimate
+       vfRespHat = vfInput .* phi(1) + phi(2);
+       vfDiff = vfRespHat - vfResp;
+       fMSE = mean(vfDiff.^2) / 2;
+       
+       % - Compute the gradient of MSE for each parameter
+       vfGrad(1) = mean(vfDiff .* vfInput);
+       vfGrad(2) = mean(vfDiff);
+    end
+
+Initial parameters `phi0` are Normally distributed. Call the `fmin_adam` optimiser with a learning rate of 0.01.
+
+    phi0 = randn(2, 1);
+    phiHat = fmin_adam(@(phi)LinearRegressionMSEGradients(phi, vfInput, vfResp), phi0, 0.01)
+
+Output:
+
+     Iteration   Func-count         f(x)   Improvement    Step-size
+    ----------   ----------   ----------   ----------   ----------
+          2130         4262       0.0051        5e-07      0.00013
+    ----------   ----------   ----------   ----------   ----------
+
+    Finished optimization.
+       Reason: Function improvement [5e-07] less than TolFun [1e-06].
+
+    phiHat =
+        2.9498
+        2.0273
+
+
+###Linear regression with minibatches
+
+Set up a simple linear regression problem, as above.
+
+    nDataSetSize = 1000;
+    vfInput = rand(1, nDataSetSize);
+    phiTrue = [3 2];
+    fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
+    vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
             
 Configure minibatches. Minibatches contain random sets of indices into the data.
 
@@ -38,11 +67,11 @@ Configure minibatches. Minibatches contain random sets of indices into the data.
     mnBatches = randi(nDataSetSize, nBatchSize, nNumBatches);
     cvnBatches = mat2cell(mnBatches, nBatchSize, ones(1, nNumBatches));
        
-Define the function to minimise; in this case, the mean-square error over the regression problem.
+Define the function to minimise; in this case, the mean-square error over the regression problem. The iteration index `nIter` defines which mini-batch to evaluate the problem over.
 
     fhBatchInput = @(nIter) vfInput(cvnBatches{mod(nIter, nNumBatches-1)+1});
     fhBatchResp = @(nIter) vfResp(cvnBatches{mod(nIter, nNumBatches-1)+1});
-    fhCost = @(x, nIter) mean((fhProblem(x, fhBatchInput(nIter)) - fhBatchResp(nIter)).^2);
+    fhCost = @(phi, nIter) mean((fhProblem(phi, fhBatchInput(nIter)) - fhBatchResp(nIter)).^2);
 
 Turn off analytical gradients for the `adam` optimiser, and ensure that we permit sufficient function calls.
 
@@ -52,8 +81,8 @@ Turn off analytical gradients for the `adam` optimiser, and ensure that we permi
     
 Call the `fmin_adam` optimiser with a learning rate of `0.1`. Initial parameters are Normally distributed.
 
-    x0 = randn(2, 1);
-    x = fmin_adam(fhCost, x0, 0.1, [], [], [], [], sOpt)
+    phi0 = randn(2, 1);
+    phiHat = fmin_adam(fhCost, phi0, 0.1, [], [], [], [], sOpt)
 
 The output of the optimisation process (which will differ over random data and random initialisations):
 
@@ -65,12 +94,12 @@ The output of the optimisation process (which will differ over random data and r
     Finished optimization.
        Reason: Step size [3.8e-06] less than TolX [1e-05].
 
-    x =
+    phiHat =
         2.8949
         1.9826
     
-### Detailed usage
-####Input arguments
+## Detailed usage
+### Input arguments
 `fun` is a function handle `[fCost <, vfCdX>] = @(x <, nIter>)` defining the function to minimise . It must return the cost at the parameter `x`, optionally evaluated over a mini-batch of data. If analytical gradients are available (recommended), then `fun` must return the gradients in `vfCdX`, evaluated at `x` (optionally over a mini-batch). If analytical gradients are not available, then complex-step finite difference estimates will be used.
 
 To use analytical gradients (default), set `options.GradObj = 'on'`. To force the use of finite difference gradient estimates, set `options.GradObj = 'off'`.
@@ -79,7 +108,7 @@ To use analytical gradients (default), set `options.GradObj = 'on'`. To force th
 
 Steps that do not lead to a reduction in the function to be minimised are not taken.
 
-####Output arguments
+### Output arguments
 `x` will be a set of parameters estimated to minimise `fCost`. `fval` will be the value returned from `fun` at `x`.
  
 `exitflag` will be an integer value indicating why the algorithm terminated:
