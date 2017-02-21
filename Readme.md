@@ -71,6 +71,10 @@ Configure minibatches. Minibatches contain random sets of indices into the data.
     nNumBatches = 100;
     mnBatches = randi(nDataSetSize, nBatchSize, nNumBatches);
     cvnBatches = mat2cell(mnBatches, nBatchSize, ones(1, nNumBatches));
+    figure; hold;
+    cellfun(@(b)plot(vfInput(b), vfResp(b), '.'), cvnBatches);
+
+<img src="http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_minibatches.png" />
        
 Define the function to minimise; in this case, the mean-square error over the regression problem. The iteration index `nIter` defines which mini-batch to evaluate the problem over.
 
