@@ -18,7 +18,7 @@ Set up a simple linear regression problem: $$$y = x\cdot\phi_1 + \phi_2 + \zeta$
     vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
     plot(vfInput, vfResp, '.'); hold;
     
-<img src="http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_scatter.png" />
+<img src="images/regression_scatter.png" />
 
 Now we define a cost function to minimise, which returns analytical gradients:
 
@@ -53,7 +53,7 @@ Output:
         2.9498
         2.0273
 
-<img src="http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_fit.png" />
+<img src="images/regression_fit.png" />
 
 ###Linear regression with minibatches
 
@@ -74,7 +74,7 @@ Configure minibatches. Minibatches contain random sets of indices into the data.
     figure; hold;
     cellfun(@(b)plot(vfInput(b), vfResp(b), '.'), cvnBatches);
 
-<img src="http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_minibatches.png" />
+<img src="images/regression_minibatches.png" />
        
 Define the function to minimise; in this case, the mean-square error over the regression problem. The iteration index `nIter` defines which mini-batch to evaluate the problem over.
 
