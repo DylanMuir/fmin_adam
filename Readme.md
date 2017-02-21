@@ -16,9 +16,9 @@ Set up a simple linear regression problem: $$$y = x\cdot\phi_1 + \phi_2 + \zeta$
     phiTrue = [3 2];
     fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
     vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
-    plot(vfInput, vfResp, '.');
+    plot(vfInput, vfResp, '.'); hold;
     
-![Scatter plot of simple regression problem](http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_scatter.png)
+<img src="http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_scatter.png" />
 
 Now we define a cost function to minimise, which returns analytical gradients:
 
@@ -37,6 +37,7 @@ Initial parameters `phi0` are Normally distributed. Call the `fmin_adam` optimis
 
     phi0 = randn(2, 1);
     phiHat = fmin_adam(@(phi)LinearRegressionMSEGradients(phi, vfInput, vfResp), phi0, 0.01)
+    plot(vfInput, fhProblem(phiHat, vfInput), '.');
 
 Output:
 
@@ -52,6 +53,7 @@ Output:
         2.9498
         2.0273
 
+<img src="http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_fit.png" />
 
 ###Linear regression with minibatches
 
