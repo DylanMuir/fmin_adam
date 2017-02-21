@@ -16,6 +16,9 @@ Set up a simple linear regression problem: $$$y = x\cdot\phi_1 + \phi_2 + \zeta$
     phiTrue = [3 2];
     fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
     vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
+    plot(vfInput, vfResp, '.');
+    
+![Scatter plot of simple regression problem](http://github.com/DylanMuir/fmin_adam/raw/master/images/regression_scatter.png)
 
 Now we define a cost function to minimise, which returns analytical gradients:
 
