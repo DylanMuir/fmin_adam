@@ -9,7 +9,7 @@ This is a `Matlab` implementation of the Adam optimiser from Kingma and Ba [[1]]
 ## Examples
 ###Simple regression problem with gradients
 
-Set up a simple linear regression problem: [$$$y = x\cdot\phi_1 + \phi_2 + \zeta$$$](https://latex.codecogs.com/png.latex?%5Cinline%20y%20%3D%20x%5Ccdot%5Cphi_1%20&plus;%20%5Cphi_2%20&plus;%20%5Czeta), where [$$$\zeta \sim N(0, 0.1)$$$](https://latex.codecogs.com/png.download?%5Cinline%20%5Czeta%20%5Csim%20N%280%2C%200.1%29). We'll take [$$$\phi = \left[3, 2\right]$$$](https://latex.codecogs.com/png.download?%5Cinline%20%5Cphi%20%3D%20%5Cleft%5B3%2C%202%5Cright%5D) for this example. Let's draw some samples from this problem:
+Set up a simple linear regression problem: ![$$$y = x\cdot\phi_1 + \phi_2 + \zeta$$$](https://latex.codecogs.com/png.latex?%5Cinline%20y%20%3D%20x%5Ccdot%5Cphi_1%20&plus;%20%5Cphi_2%20&plus;%20%5Czeta), where ![$$$\zeta \sim N(0, 0.1)$$$](https://latex.codecogs.com/png.latex?%5Cinline%20%5Czeta%20%5Csim%20N%280%2C%200.1%29). We'll take ![$$$\phi = \left[3, 2\right]$$$](https://latex.codecogs.com/png.latex?%5Cinline%20%5Cphi%20%3D%20%5Cleft%5B3%2C%202%5Cright%5D) for this example. Let's draw some samples from this problem:
 
     nDataSetSize = 1000;
     vfInput = rand(1, nDataSetSize);
