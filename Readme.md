@@ -11,33 +11,39 @@ This is a `Matlab` implementation of the Adam optimiser from Kingma and Ba [[1]]
 
 Set up a simple linear regression problem: ![$$$y = x\cdot\phi_1 + \phi_2 + \zeta$$$](https://latex.codecogs.com/svg.latex?%5Cinline%20y%20%3D%20x%5Ccdot%5Cphi_1%20&plus;%20%5Cphi_2%20&plus;%20%5Czeta), where ![$$$\zeta \sim N(0, 0.1)$$$](https://latex.codecogs.com/svg.latex?%5Cinline%20%5Czeta%20%5Csim%20N%280%2C%200.1%29). We'll take ![$$$\phi = \left[3, 2\right]$$$](https://latex.codecogs.com/svg.latex?%5Cinline%20%5Cphi%20%3D%20%5Cleft%5B3%2C%202%5Cright%5D) for this example. Let's draw some samples from this problem:
 
-    nDataSetSize = 1000;
-    vfInput = rand(1, nDataSetSize);
-    phiTrue = [3 2];
-    fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
-    vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
-    plot(vfInput, vfResp, '.'); hold;
-    
+```matlab
+nDataSetSize = 1000;
+vfInput = rand(1, nDataSetSize);
+phiTrue = [3 2];
+fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
+vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
+plot(vfInput, vfResp, '.'); hold;
+```
+
 <img src="images/regression_scatter.png" />
 
 Now we define a cost function to minimise, which returns analytical gradients:
 
-    function [fMSE, vfGrad] = LinearRegressionMSEGradients(phi, vfInput, vfResp)
-       % - Compute mean-squared error using the current parameter estimate
-       vfRespHat = vfInput .* phi(1) + phi(2);
-       vfDiff = vfRespHat - vfResp;
-       fMSE = mean(vfDiff.^2) / 2;
-       
-       % - Compute the gradient of MSE for each parameter
-       vfGrad(1) = mean(vfDiff .* vfInput);
-       vfGrad(2) = mean(vfDiff);
-    end
+```matlab
+function [fMSE, vfGrad] = LinearRegressionMSEGradients(phi, vfInput, vfResp)
+   % - Compute mean-squared error using the current parameter estimate
+   vfRespHat = vfInput .* phi(1) + phi(2);
+   vfDiff = vfRespHat - vfResp;
+   fMSE = mean(vfDiff.^2) / 2;
+   
+   % - Compute the gradient of MSE for each parameter
+   vfGrad(1) = mean(vfDiff .* vfInput);
+   vfGrad(2) = mean(vfDiff);
+end
+```
 
 Initial parameters `phi0` are Normally distributed. Call the `fmin_adam` optimiser with a learning rate of 0.01.
 
-    phi0 = randn(2, 1);
-    phiHat = fmin_adam(@(phi)LinearRegressionMSEGradients(phi, vfInput, vfResp), phi0, 0.01)
-    plot(vfInput, fhProblem(phiHat, vfInput), '.');
+```matlab
+phi0 = randn(2, 1);
+phiHat = fmin_adam(@(phi)LinearRegressionMSEGradients(phi, vfInput, vfResp), phi0, 0.01)
+plot(vfInput, fhProblem(phiHat, vfInput), '.');
+````
 
 Output:
 
@@ -59,40 +65,47 @@ Output:
 
 Set up a simple linear regression problem, as above.
 
-    nDataSetSize = 1000;
-    vfInput = rand(1, nDataSetSize);
-    phiTrue = [3 2];
-    fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
-    vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
-            
+```matlab
+nDataSetSize = 1000;
+vfInput = rand(1, nDataSetSize);
+phiTrue = [3 2];
+fhProblem = @(phi, vfInput) vfInput .* phi(1) + phi(2);
+vfResp = fhProblem(phiTrue, vfInput) + randn(1, nDataSetSize) * .1;
+```
+
 Configure minibatches. Minibatches contain random sets of indices into the data.
 
-    nBatchSize = 50;
-    nNumBatches = 100;
-    mnBatches = randi(nDataSetSize, nBatchSize, nNumBatches);
-    cvnBatches = mat2cell(mnBatches, nBatchSize, ones(1, nNumBatches));
-    figure; hold;
-    cellfun(@(b)plot(vfInput(b), vfResp(b), '.'), cvnBatches);
-
+```matlab
+nBatchSize = 50;
+nNumBatches = 100;
+mnBatches = randi(nDataSetSize, nBatchSize, nNumBatches);
+cvnBatches = mat2cell(mnBatches, nBatchSize, ones(1, nNumBatches));
+figure; hold;
+cellfun(@(b)plot(vfInput(b), vfResp(b), '.'), cvnBatches);
+```
 <img src="images/regression_minibatches.png" />
        
 Define the function to minimise; in this case, the mean-square error over the regression problem. The iteration index `nIter` defines which mini-batch to evaluate the problem over.
 
-    fhBatchInput = @(nIter) vfInput(cvnBatches{mod(nIter, nNumBatches-1)+1});
-    fhBatchResp = @(nIter) vfResp(cvnBatches{mod(nIter, nNumBatches-1)+1});
-    fhCost = @(phi, nIter) mean((fhProblem(phi, fhBatchInput(nIter)) - fhBatchResp(nIter)).^2);
-
+```matlab
+fhBatchInput = @(nIter) vfInput(cvnBatches{mod(nIter, nNumBatches-1)+1});
+fhBatchResp = @(nIter) vfResp(cvnBatches{mod(nIter, nNumBatches-1)+1});
+fhCost = @(phi, nIter) mean((fhProblem(phi, fhBatchInput(nIter)) - fhBatchResp(nIter)).^2);
+```
 Turn off analytical gradients for the `adam` optimiser, and ensure that we permit sufficient function calls.
 
-    sOpt = optimset('fmin_adam');
-    sOpt.GradObj = 'off';
-    sOpt.MaxFunEvals = 1e4;
-    
+```matlab
+sOpt = optimset('fmin_adam');
+sOpt.GradObj = 'off';
+sOpt.MaxFunEvals = 1e4;
+```
+
 Call the `fmin_adam` optimiser with a learning rate of `0.1`. Initial parameters are Normally distributed.
 
-    phi0 = randn(2, 1);
-    phiHat = fmin_adam(fhCost, phi0, 0.1, [], [], [], [], sOpt)
-
+```matlab
+phi0 = randn(2, 1);
+phiHat = fmin_adam(fhCost, phi0, 0.1, [], [], [], [], sOpt)
+```
 The output of the optimisation process (which will differ over random data and random initialisations):
 
     Iteration   Func-count         f(x)   Improvement    Step-size
